@@ -1,74 +1,68 @@
 package calculator;
 
-//Import Junit5 libraries for unit testing:
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-class TestTimes {
+public class TestTimes {
 
-	private final int value1 = 8;
-	private final int value2 = 6;
+	private static final double DELTA = 1e-10;
 	private Times op;
 	private List<Expression> params;
+	private final double v1 = 3.0, v2 = 4.0, v3 = 5.0;
 
 	@BeforeEach
-	void setUp() {
-		  params = Arrays.asList(new MyNumber(value1),new MyNumber(value2));
-		  try { op = new Times(params); }
-		  catch(IllegalConstruction e) { fail(); }
+	void setUp() throws IllegalConstruction {
+		params = List.of(new MyNumber(v1), new MyNumber(v2));
+		op = new Times(params, Notation.INFIX);
 	}
 
 	@Test
-	void testConstructor1() {
-		// It should not be possible to create an expression without null parameter list
-		assertThrows(IllegalConstruction.class, () -> op = new Times(null));
+	void testOpMethod() {
+		assertEquals(v1 * v2, ((Operation) op).op(v1, v2), DELTA);
 	}
 
 	@Test
-	void testConstructor2() {
-		// A Plus expression should not be the same as a Times expression
-		try {
-			assertNotSame(op, new Plus(new ArrayList<>()));
-		} catch (IllegalConstruction e) {
-			fail();
-		}
+	void testEvalBinary() throws IllegalConstruction {
+		assertEquals(v1 * v2, op.eval(), DELTA);
 	}
 
 	@Test
-	void testEquals() {
-		// Two similar expressions, constructed separately (and using different constructors) should not be equal
-		List<Expression> p = Arrays.asList(new MyNumber(value1), new MyNumber(value2));
-		try {
-			Times e = new Times(p, Notation.INFIX);
-			assertEquals(op, e);
-		}
-		catch(IllegalConstruction e) { fail(); }
+	void testEvalVariadic() throws IllegalConstruction {
+		Times variadic = new Times(
+				List.of(new MyNumber(v1), new MyNumber(v2), new MyNumber(v3)),
+				Notation.POSTFIX
+		);
+		assertEquals(v1 * v2 * v3, variadic.eval(), DELTA);
 	}
 
 	@Test
-	void testNull() {
-		assertDoesNotThrow(() -> op==null); // Direct way to test if the null case is handled.
+	void testToStringDefault() {
+		assertEquals("( 3.0 * 4.0 )", op.toString());
 	}
 
 	@Test
-	void testHashCode() {
-		// Two similar expressions, constructed separately (and using different constructors) should have the same hashcode
-		List<Expression> p = Arrays.asList(new MyNumber(value1), new MyNumber(value2));
-		try {
-			Times e = new Times(p, Notation.INFIX);
-			assertEquals(e.hashCode(), op.hashCode());
-		}
-		catch(IllegalConstruction e) { fail(); }
+	void testToStringExplicitPrefix() {
+		assertEquals("* ( 3.0, 4.0 )", op.toString(Notation.PREFIX));
 	}
 
 	@Test
-	void testNullParamList() {
-		params = null;
-		assertThrows(IllegalConstruction.class, () -> op = new Times(params));
+	void testToStringExplicitPostfix() {
+		assertEquals("( 3.0, 4.0 ) *", op.toString(Notation.POSTFIX));
 	}
 
+	@Test
+	void testNoOperands() {
+		assertThrows(IllegalConstruction.class,
+				() -> new Times(List.of(), Notation.INFIX));
+	}
+
+	@Test
+	void testEqualsAndHashCode() throws IllegalConstruction {
+		Times t1 = new Times(params, Notation.INFIX);
+		Times t2 = new Times(params, Notation.INFIX);
+		assertEquals(t1, t2);
+		assertEquals(t1.hashCode(), t2.hashCode());
+	}
 }

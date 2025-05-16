@@ -1,79 +1,66 @@
 package calculator;
 
-//Import Junit5 libraries for unit testing:
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-class TestDivides {
+public class TestDivides {
 
-	private final int value1 = 8;
-	private final int value2 = 6;
+	private static final double DELTA = 1e-10;
 	private Divides op;
 	private List<Expression> params;
+	private final double v1 = 7.0, v2 = 3.0;
 
 	@BeforeEach
-	void setUp() {
-		  params = Arrays.asList(new MyNumber(value1), new MyNumber(value2));
-		  try {
-		  	op = new Divides(params);
-			op.notation = Notation.INFIX; // reset the notation to infix (which is the default) before each test
-		  }
-		  catch(IllegalConstruction e) { fail(); }
+	void setUp() throws IllegalConstruction {
+		params = List.of(new MyNumber(v1), new MyNumber(v2));
+		op = new Divides(params, Notation.INFIX);
 	}
 
 	@Test
-	void testConstructor1() {
-		// It should not be possible to create an expression without null parameter list
-		assertThrows(IllegalConstruction.class, () -> op = new Divides(null));
-	}
-
-	@SuppressWarnings("AssertBetweenInconvertibleTypes")
-	@Test
-	void testConstructor2() {
-		// A Times expression should not be the same as a Divides expression
-		try {
-			assertNotSame(op, new Times(new ArrayList<>()));
-		} catch (IllegalConstruction e) {
-			fail();
-		}
+	void testOpMethod() {
+		assertEquals(v1 / v2, ((Operation) op).op(v1, v2), DELTA);
 	}
 
 	@Test
-	void testEquals() {
-		// Two similar expressions, constructed separately (and using different constructors) should be equal
-		List<Expression> p = Arrays.asList(new MyNumber(value1), new MyNumber(value2));
-		try {
-			Divides d = new Divides(p, Notation.INFIX);
-			assertEquals(op, d);
-		}
-		catch(IllegalConstruction e) { fail(); }
-	}
-
-	@SuppressWarnings("ConstantConditions")
-	@Test
-	void testNull() {
-		assertDoesNotThrow(() -> op==null); // Direct way to to test if the null case is handled.
+	void testEval() throws IllegalConstruction {
+		assertEquals(v1 / v2, op.eval(), DELTA);
 	}
 
 	@Test
-	void testHashCode() {
-		// Two similar expressions, constructed separately (and using different constructors) should have the same hashcode
-		List<Expression> p = Arrays.asList(new MyNumber(value1), new MyNumber(value2));
-		try {
-			Divides e = new Divides(p, Notation.INFIX);
-			assertEquals(e.hashCode(), op.hashCode());
-		}
-		catch(IllegalConstruction e) { fail(); }
+	void testToStringDefault() {
+		assertEquals("( 7.0 / 3.0 )", op.toString());
 	}
 
 	@Test
-	void testNullParamList() {
-		params = null;
-		assertThrows(IllegalConstruction.class, () -> op = new Divides(params));
+	void testToStringExplicitPrefix() {
+		assertEquals("/ ( 7.0, 3.0 )", op.toString(Notation.PREFIX));
 	}
 
+	@Test
+	void testToStringExplicitPostfix() {
+		assertEquals("( 7.0, 3.0 ) /", op.toString(Notation.POSTFIX));
+	}
+
+	@Test
+	void testNoOperands() {
+		assertThrows(IllegalConstruction.class,
+				() -> new Divides(List.of(), Notation.INFIX));
+	}
+
+	@Test
+	void testWrongNumberOfOperands() {
+		assertThrows(IllegalConstruction.class,
+				() -> new Divides(List.of(new MyNumber(1), new MyNumber(2), new MyNumber(3)), Notation.INFIX));
+	}
+
+	@Test
+	void testEqualsAndHashCode() throws IllegalConstruction {
+		Divides d1 = new Divides(params, Notation.INFIX);
+		Divides d2 = new Divides(params, Notation.INFIX);
+		assertEquals(d1, d2);
+		assertEquals(d1.hashCode(), d2.hashCode());
+	}
 }

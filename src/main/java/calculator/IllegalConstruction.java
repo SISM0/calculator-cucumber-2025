@@ -1,8 +1,16 @@
+// src/main/java/calculator/IllegalConstruction.java
 package calculator;
 
-/**
- * Exception that will be used when an incorrectly constructed arithmetic expression is encountered.
- */
 public class IllegalConstruction extends Exception {
+    public IllegalConstruction(String msg) {
+        super(msg);
+    }
 
+    /**
+     * Nouveau constructeur pour pouvoir faire
+     *   throw new IllegalConstruction("…", this);
+     */
+    public IllegalConstruction(String msg, Expression source) {
+        super(msg);
+    }
 }

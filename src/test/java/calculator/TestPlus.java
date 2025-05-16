@@ -1,78 +1,66 @@
 package calculator;
 
-//Import Junit5 libraries for unit testing:
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-class TestPlus {
+public class TestPlus {
 
-	private final int value1 = 8;
-	private final int value2 = 6;
+	private static final double DELTA = 1e-10;
 	private Plus op;
 	private List<Expression> params;
+	private final double v1 = 3.0, v2 = 4.0, v3 = 5.0;
 
 	@BeforeEach
-	void setUp() {
-		  params = new ArrayList<>(Arrays.asList(new MyNumber(value1),new MyNumber(value2)));
-		  try { op = new Plus(params); }
-		  catch(IllegalConstruction e) { fail(); }
+	void setUp() throws IllegalConstruction {
+		params = List.of(new MyNumber(v1), new MyNumber(v2), new MyNumber(v3));
+		op = new Plus(params, Notation.INFIX);
 	}
 
 	@Test
-	void testConstructor1() {
-		// It should not be possible to create a Plus expression without null parameter list
-		assertThrows(IllegalConstruction.class, () -> op = new Plus(null));
-	}
-
-	@SuppressWarnings("AssertBetweenInconvertibleTypes")
-	@Test
-	void testConstructor2() {
-		// A Times expression should not be the same as a Plus expression
-		try {
-			assertNotSame(op, new Times(new ArrayList<>()));
-		} catch (IllegalConstruction e) {
-			fail();
-		}
+	void testOpMethod() {
+		// Vérifie la méthode op
+		assertEquals(v1 + v2, ((Operation) op).op(v1, v2), DELTA);
 	}
 
 	@Test
-	void testEquals() {
-		// Two similar expressions, constructed separately (and using different constructors) should be equal
-		ArrayList<Expression> p = new ArrayList<>(Arrays.asList(new MyNumber(value1), new MyNumber(value2)));
-		try {
-			Plus e = new Plus(p, Notation.INFIX);
-			assertEquals(op, e);
-			assertEquals(e, e);
-			assertNotEquals(e, new Plus(new ArrayList<>(Arrays.asList(new MyNumber(5), new MyNumber(4))), Notation.INFIX));
-		}
-		catch(IllegalConstruction e) { fail(); }
-	}
-
-	@SuppressWarnings("ConstantConditions")
-	@Test
-	void testNull() {
-			assertDoesNotThrow(() -> op==null); // Direct way to to test if the null case is handled.
+	void testEval() throws IllegalConstruction {
+		// Vérifie l'évaluation complète
+		assertEquals(v1 + v2 + v3, op.eval(), DELTA);
 	}
 
 	@Test
-	void testHashCode() {
-		// Two similar expressions, constructed separately (and using different constructors) should have the same hashcode
-		ArrayList<Expression> p = new ArrayList<>(Arrays.asList(new MyNumber(value1), new MyNumber(value2)));
-		try {
-			Plus e = new Plus(p, Notation.INFIX);
-			assertEquals(e.hashCode(), op.hashCode());
-		}
-		catch(IllegalConstruction e) { fail(); }
+	void testToStringDefault() {
+		// INFIX avec parenthèses et décimales
+		assertEquals("( 3.0 + 4.0 + 5.0 )", op.toString());
 	}
 
 	@Test
-	void testNullParamList() {
-		params = null;
-		assertThrows(IllegalConstruction.class, () -> op = new Plus(params));
+	void testToStringExplicitPrefix() {
+		// PREFIX
+		assertEquals("+ ( 3.0, 4.0, 5.0 )", op.toString(Notation.PREFIX));
 	}
 
+	@Test
+	void testToStringExplicitPostfix() {
+		// POSTFIX
+		assertEquals("( 3.0, 4.0, 5.0 ) +", op.toString(Notation.POSTFIX));
+	}
+
+	@Test
+	void testNoOperands() {
+		// Erreur si 0 opérandes
+		assertThrows(IllegalConstruction.class,
+				() -> new Plus(List.of(), Notation.INFIX));
+	}
+
+	@Test
+	void testEqualsAndHashCode() throws IllegalConstruction {
+		// Vérification equals & hashCode
+		Plus p1 = new Plus(params, Notation.INFIX);
+		Plus p2 = new Plus(params, Notation.INFIX);
+		assertEquals(p1, p2);
+		assertEquals(p1.hashCode(), p2.hashCode());
+	}
 }

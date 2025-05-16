@@ -2,50 +2,37 @@ package calculator;
 
 import java.util.List;
 
-/** This class represents the arithmetic division operation "/".
- * The class extends an abstract superclass Operation.
- * Other subclasses of Operation represent other arithmetic operations.
- * @see Operation
- * @see Minus
- * @see Times
- * @see Plus
+/**
+ * Operation de division binaire.
+ * Requiert exactement deux opérandes.
  */
-public final class Divides extends Operation
-{
-
-  /**
-   * Class constructor specifying a number of Expressions to divide.
-   *
-   * @param elist The list of Expressions to divide
-   * @throws IllegalConstruction    If an empty list of expressions if passed as parameter
-   * @see #Divides(List<Expression>,Notation)
-   */
-  public /*constructor*/ Divides(List<Expression> elist) throws IllegalConstruction {
-	this(elist, null);
-  }
+public class Divides extends Operation {
 
     /**
-     * Class constructor specifying a number of Expressions to divide,
-     * as well as the notation used to represent the operation.
-     *
-     * @param elist The list of Expressions to divide
-     * @param n The Notation to be used to represent the operation
-     * @throws IllegalConstruction  If an empty list of expressions if passed as parameter
-     * @see #Divides(List<Expression>)
-     * @see Operation#Operation(List<Expression>,Notation)
+     * Constructeur principal avec notation.
+     * @param args liste de deux opérandes
+     * @param notation mode d'affichage (INFIX/…)
+     * @throws IllegalConstruction si args est null ou taille != 2
      */
-  public Divides(List<Expression> elist, Notation n) throws IllegalConstruction {
-	super(elist,n);
-	symbol = "/";
-	neutral = 1;
-  }
+    public Divides(List<Expression> args, Notation notation) throws IllegalConstruction {
+        super(args, notation);
+        if (args.size() != 2) {
+            throw new IllegalConstruction("Divides requires exactly two operands", this);
+        }
+        this.symbol  = "/";
+        this.neutral = 1.0;
+    }
 
     /**
-     * The actual computation of the (binary) arithmetic division of two integers
-     * @param l The first integer
-     * @param r The second integer that should divide the first
-     * @return The integer that is the result of the division
+     * Constructeur historique par défaut en INFIX.
      */
-  public int op(int l, int r)
-    { return (l/r); }
+    public Divides(List<Expression> args) throws IllegalConstruction {
+        this(args, Notation.INFIX);
+    }
+
+    @Override
+    public double op(double l, double r) {
+        if (r == 0) throw new ArithmeticException("Division by zero");
+        return l / r;
+    }
 }

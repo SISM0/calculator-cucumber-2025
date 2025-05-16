@@ -4,54 +4,38 @@ import calculator.Expression;
 import calculator.MyNumber;
 import calculator.Operation;
 
-import java.util.ArrayList;
+import java.util.List;
 
-/** Evaluation is a concrete visitor that serves to
- * compute and evaluate the results of arithmetic expressions.
+/**
+ * Visitor qui évalue un AST et stocke le résultat en interne.
  */
 public class Evaluator extends Visitor {
+    private double result;
 
-    /**
-     * Default constructor of the class. Does not initialise anything.
-     */
-    public Evaluator() {}
+    public double getResult() {
+        return result;
+    }
 
-    /** The result of the evaluation will be stored in this private variable */
-    private int computedValue;
-
-    /** getter method to obtain the result of the evaluation
-     *
-     * @return an Integer object containing the result of the evaluation
-     */
-    public Integer getResult() { return computedValue; }
-
-    /** Use the visitor design pattern to visit a number.
-     *
-     * @param n The number being visited
-     */
+    @Override
     public void visit(MyNumber n) {
-        computedValue = n.getValue();
+        result = n.getValue();
     }
 
-    /** Use the visitor design pattern to visit an operation
-     *
-     * @param o The operation being visited
-     */
+    @Override
     public void visit(Operation o) {
-        ArrayList<Integer> evaluatedArgs = new ArrayList<>();
-        //first loop to recursively evaluate each subexpression
-        for(Expression a:o.args) {
-            a.accept(this);
-            evaluatedArgs.add(computedValue);
+        List<Expression> args = o.getArgs();
+        // on évalue récursivement le premier
+        args.get(0).accept(this);
+        double acc = result;
+        // les suivants
+        for (int i = 1; i < args.size(); i++) {
+            args.get(i).accept(this);
+            acc = o.op(acc, result);
         }
-        //second loop to accumulate all the evaluated subresults
-        int temp = evaluatedArgs.get(0);
-        int max = evaluatedArgs.size();
-        for(int counter=1; counter<max; counter++) {
-            temp = o.op(temp,evaluatedArgs.get(counter));
+        // cas unaire (1 seul arg) : op(neutral, arg)
+        if (args.size() == 1) {
+            acc = o.op(o.getNeutral(), acc);
         }
-        // store the accumulated result
-        computedValue = temp;
+        result = acc;
     }
-
 }

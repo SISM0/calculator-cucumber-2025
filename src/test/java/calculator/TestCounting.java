@@ -1,63 +1,65 @@
 package calculator;
 
-//Import Junit5 libraries for unit testing:
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
+public class TestCounting {
 
-class TestCounting {
-
-    private int value1, value2;
-    private Expression e;
-
-    @BeforeEach
-    void setUp() {
-        value1 = 8;
-        value2 = 6;
-        e = null;
+    @Test
+    void testLeafCounts() {
+        MyNumber n = new MyNumber(3.0);
+        assertEquals(1, n.countDepth(), "Depth of leaf should be 1");
+        assertEquals(0, n.countOps(),   "Ops of leaf should be 0");
+        assertEquals(1, n.countNbs(),   "Nbs of leaf should be 1");
     }
 
     @Test
-    void testNumberCounting() {
-        e = new MyNumber(value1);
-        //test whether a number has zero depth (i.e. no nested expressions)
-        assertEquals( 0, e.countDepth());
-        //test whether a number contains zero operations
-        assertEquals(0, e.countOps());
-        //test whether a number contains 1 number
-        assertEquals(1, e.countNbs());
+    void testUnaryCounts() throws IllegalConstruction {
+        Minus m = new Minus(List.of(new MyNumber(7.0)), Notation.PREFIX);
+        assertEquals(2, m.countDepth(), "Depth of unary should be 2");
+        assertEquals(1, m.countOps(),   "Ops of unary should be 1");
+        assertEquals(1, m.countNbs(),   "Nbs of unary should be 1");
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"*", "+", "/", "-"})
-    void testOperationCounting(String symbol) {
-        List<Expression> params = Arrays.asList(new MyNumber(value1),new MyNumber(value2));
-        //Operation op = null;
-        try {
-            //construct another type of operation depending on the input value
-            //of the parameterised test
-            switch (symbol) {
-                case "+"	->	e = new Plus(params);
-                case "-"	->	e = new Minus(params);
-                case "*"	->	e = new Times(params);
-                case "/"	->	e = new Divides(params);
-                default		->	fail();
-            }
-        } catch (IllegalConstruction e) {
-            fail();
-        }
-        //test whether a binary operation has depth 1
-        assertEquals(1, e.countDepth(),"counting depth of an Operation");
-        //test whether a binary operation contains 1 operation
-        assertEquals(1, e.countOps());
-        //test whether a binary operation contains 2 numbers
-        assertEquals(2, e.countNbs());
+    @Test
+    void testBinaryCounts() throws IllegalConstruction {
+        Times t = new Times(List.of(new MyNumber(2.0), new MyNumber(3.0)), Notation.INFIX);
+        assertEquals(2, t.countDepth(), "Depth of binary should be 2");
+        assertEquals(1, t.countOps(),   "Ops of binary should be 1");
+        assertEquals(2, t.countNbs(),   "Nbs of binary should be 2");
     }
 
+    @Test
+    void testNestedCounts() throws IllegalConstruction {
+        Divides d = new Divides(
+                List.of(
+                        new MyNumber(5.0),
+                        new Times(List.of(new MyNumber(2.0), new MyNumber(3.0)), Notation.INFIX)
+                ), Notation.POSTFIX
+        );
+        assertEquals(3, d.countDepth(), "Depth of nested should be 3");
+        assertEquals(2, d.countOps(),   "Ops of nested should be 2");
+        assertEquals(3, d.countNbs(),   "Nbs of nested should be 3");
+    }
+
+    @Test
+    void testComplexExpressionCounting() throws IllegalConstruction {
+        // (2 + 3) * (4 - 1) / 5
+        Expression e = new Divides(
+                List.of(
+                        new Times(
+                                List.of(
+                                        new Plus(List.of(new MyNumber(2.0), new MyNumber(3.0)), Notation.INFIX),
+                                        new Minus(List.of(new MyNumber(4.0), new MyNumber(1.0)), Notation.INFIX)
+                                ), Notation.INFIX
+                        ),
+                        new MyNumber(5.0)
+                ), Notation.INFIX
+        );
+        assertEquals(4, e.countOps(), "Ops of complex should be 4");
+        assertEquals(4, e.countDepth(), "Depth of complex should be 4");
+        assertEquals(5, e.countNbs(),   "Nbs of complex should be 5");
+    }
 }

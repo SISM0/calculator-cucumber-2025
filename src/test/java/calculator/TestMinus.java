@@ -1,76 +1,65 @@
 package calculator;
 
-//Import Junit5 libraries for unit testing:
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-class TestMinus {
+public class TestMinus {
 
-	private final int value1 = 8;
-	private final int value2 = 6;
+	private static final double DELTA = 1e-10;
 	private Minus op;
 	private List<Expression> params;
+	private final double v1 = 8.0, v2 = 6.0;
 
 	@BeforeEach
-	void setUp() {
-		  params = Arrays.asList(new MyNumber(value1),new MyNumber(value2));
-		  try { op = new Minus(params); }
-		  catch(IllegalConstruction e) { fail(); }
+	void setUp() throws IllegalConstruction {
+		params = List.of(new MyNumber(v1), new MyNumber(v2));
+		op = new Minus(params, Notation.INFIX);
 	}
 
 	@Test
-	void testConstructor1() {
-		// It should not be possible to create an expression without null parameter list
-		assertThrows(IllegalConstruction.class, () -> op = new Minus(null));
-	}
-
-	@SuppressWarnings("AssertBetweenInconvertibleTypes")
-	@Test
-	void testConstructor2() {
-		// A Times expression should not be the same as a Minus expression
-		try {
-			assertNotSame(op, new Times(new ArrayList<>()));
-		} catch (IllegalConstruction e) {
-			fail();
-		}
+	void testOpMethod() {
+		assertEquals(v1 - v2, ((Operation) op).op(v1, v2), DELTA);
 	}
 
 	@Test
-	void testEquals() {
-		// Two similar expressions, constructed separately (and using different constructors) should not be equal
-		List<Expression> p = Arrays.asList(new MyNumber(value1), new MyNumber(value2));
-		try {
-			Minus e = new Minus(p, Notation.INFIX);
-			assertEquals(op, e);
-		}
-		catch(IllegalConstruction e) { fail(); }
-	}
-
-	@SuppressWarnings("ConstantConditions")
-	@Test
-	void testNull() {
-		assertDoesNotThrow(() -> op==null); // Direct way to to test if the null case is handled.
+	void testEvalBinary() throws IllegalConstruction {
+		assertEquals(v1 - v2, op.eval(), DELTA);
 	}
 
 	@Test
-	void testHashCode() {
-		// Two similar expressions, constructed separately (and using different constructors) should have the same hashcode
-		List<Expression> p = Arrays.asList(new MyNumber(value1), new MyNumber(value2));
-		try {
-			Minus e = new Minus(p, Notation.INFIX);
-			assertEquals(e.hashCode(), op.hashCode());
-		}
-		catch(IllegalConstruction e) { fail(); }
+	void testEvalUnary() throws IllegalConstruction {
+		Minus unary = new Minus(List.of(new MyNumber(v1)), Notation.PREFIX);
+		assertEquals(-v1, unary.eval(), DELTA);
 	}
 
 	@Test
-	void testNullParamList() {
-		params = null;
-		assertThrows(IllegalConstruction.class, () -> op = new Minus(params));
+	void testToStringDefault() {
+		assertEquals("( 8.0 - 6.0 )", op.toString());
 	}
 
+	@Test
+	void testToStringExplicitPrefix() {
+		assertEquals("- ( 8.0, 6.0 )", op.toString(Notation.PREFIX));
+	}
+
+	@Test
+	void testToStringExplicitPostfix() {
+		assertEquals("( 8.0, 6.0 ) -", op.toString(Notation.POSTFIX));
+	}
+
+	@Test
+	void testNoOperands() {
+		assertThrows(IllegalConstruction.class,
+				() -> new Minus(List.of(), Notation.INFIX));
+	}
+
+	@Test
+	void testEqualsAndHashCode() throws IllegalConstruction {
+		Minus m1 = new Minus(params, Notation.INFIX);
+		Minus m2 = new Minus(params, Notation.INFIX);
+		assertEquals(m1, m2);
+		assertEquals(m1.hashCode(), m2.hashCode());
+	}
 }
